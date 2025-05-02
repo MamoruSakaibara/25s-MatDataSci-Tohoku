@@ -213,7 +213,7 @@ For the updates:
 * Is your data suitable for a project analysis?
 * Write you databook, defining variables, units and structures -->
 
-- We analyzed the `castelli_perovskites` dataset from `matminer`, which contains 18,928 perovskite samples, 56 elements, and 66 columns after atomic fraction features were included(Table.1).
+- We analyzed the `castelli_perovskites` dataset from `matminer`, which contains 18,928 perovskite samples and 66 columns after atomic fraction features were included(Table.1).
 
 - Original features include:
   - `fermi level`
@@ -274,22 +274,26 @@ print("\nUnique values in categorical columns:\n", df.drop(columns=["structure"]
 <!-- * What you had to do to clean your data -->
 
 - Dropped the `structure` column due to incompatibility with standard ML pipelines (non-hashable object).
-- Removed `cbm` and `vbm` from the modeling phase, as they are mathematically related to `gap gllbsc`.
+- Ideally, the band gap should be 'cbm' - 'vbm'.
   - Verification:
 
 ```python
 diff = df["cbm"] - df["vbm"]
 is_equal = np.isclose(diff, df["gap gllbsc"])
-print(is_equal.sum() / len(df))  # → About 96% are exact matches.
+print(is_equal.sum() / len(df))  # → About 96% (18193/18928) are exact matches.
 ```
+- Removed `cbm` and `vbm` from the modeling phase, as they are mathematically related to `gap gllbsc`.
 
 ## Data Vizualizations
 
 <!-- * Vizualizations of your data -->
 
-- To better understand pairwise relationships and feature distributions, we generated a pairplot for the top 10 features. This helped identify trends, outliers, and non-linear dependencies(Fig.1).
-  - Pairwise trends between `gap gllbsc`, `e_form`, and atomic fractions were weakly non-linear.
-  - Many element fraction features (e.g., `O`, `N`, `Zr`) showed sparse or binary distributions.
+- To better understand pairwise relationships and feature distributions, we generated a pairplot for the top 10 features (Fig. 1). This helped identify trends, outliers, and non-linear dependencies.
+  - As verified above, strong correlations were observed between `gap gllbsc`, `cbm`, and `vbm`.
+  - Relationships between `gap gllbsc`, `e_form`, and elemental fractions were weak and mildly non-linear.
+  - Many element fraction features (e.g., `O`, `N`, `Zr`) exhibited sparse or binary-like distributions.
+  - In addition, energetically stable materials tended to have slightly lower Fermi levels.
+
 
 ```python
 # Select numeric columns only
@@ -308,9 +312,12 @@ plt.show()
 
 <!-- * Pairwise correlation plots, etc. -->
 
-- A correlation matrix was computed to identify the features most associated with the band gap (Fig.2). The 10 most correlated features include:
-- `cbm`, `vbm` (positively correlated)
-- `O`, `N`, `mu_b`, `e_form`, `fermi level`, etc.
+- A correlation matrix was computed to identify the features most strongly associated with the band gap (Fig. 2). Among the top 10 features were:
+  - `cbm` and `vbm`, which show strong positive correlations with the band gap, consistent with their physical definitions.
+  - `e_form` and `fermi level`, which exhibit moderate correlations and reflect the influence of thermodynamic and electronic stability.
+  - The elemental fractions of `O` and `N`, which are negatively correlated due to their complementary usage in different materials.
+  - `mu_b`, which shows a weak correlation and suggests limited magnetic contributions across most materials.
+
 
 ```python
 # Correlation heat map
